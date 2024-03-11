@@ -18,6 +18,9 @@ knitr::opts_chunk$set(
 
 'Muy poco probable' 0 \< x \< 10 'Poco probable' 10 \< x \< 20 'No estoy seguro' 20 \< x \< 30 'Es posible' 30 \< x \< 40 'Es muy posible' 40 \< x \< 50
 
+
+
+
 ```{r}
 persona1 <- data.frame(
   edad = c(18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40),
@@ -45,6 +48,8 @@ persona3 <- data.frame(
 all_personas <- rbind(persona1, persona2, persona3)
 ```
 
+
+# Corregir altura (ubicacion) de etiquetas en el eje Y
 ```{r}
 par(lab=c(30,20,20))
 par(yaxt='n')
@@ -68,13 +73,64 @@ points(x=jitter(persona3$edad), y=jitter(persona3$valor), col="green", pch=19, c
 lines(x=persona1$edad, y=persona1$valor, col="red")
 lines(x=persona2$edad, y=persona2$valor, col="blue")
 lines(x=persona3$edad, y=persona3$valor, col="green")
+
+legend(35, 50, c('Experto 1', 'Experto 2', 'Experto 3'), lty = c(1,1,1,1), 
+       col = c( 'red', 'blue', 'green'))
 ```
+# Comparacion con funciones
+
+Vemos que algunas funciones se ajustan mejor a los datos que otras, por lo que podemos descartar algunas funciones para el ajuste de los datos.
+
+```{r}
+# Load the necessary library
+library(ggplot2)
+
+# Create a data frame with example data (replace with your actual data)
+# For demonstration purposes, I'll use random data
+set.seed(420)
+data <- data.frame(
+  chi = rchisq(100, df = 5),
+  normal = rnorm(100),
+  tstudent = rt(100, df = 10),
+  exponencial = rexp(100, rate = 0.1),
+  gamma = rgamma(100, shape = 2, rate = 0.1),
+  lognormal = rlnorm(100)
+)
+
+# Create histograms using ggplot2
+histograms <- lapply(names(data), function(var_name) {
+  ggplot(data, aes(x = .data[[var_name]])) +
+    geom_histogram(binwidth = 1, fill = "lightblue", color = "black") +
+    labs(title = var_name) +
+    theme_minimal()
+})
+
+# Arrange histograms in a grid (3x3)
+library(gridExtra)
+grid.arrange(grobs = histograms, ncol = 3)
+
+# Create density plots using ggplot2
+density_plots <- lapply(names(data), function(var_name) {
+  ggplot(data, aes(x = .data[[var_name]])) +
+    geom_density(fill = "lightblue", color = "black", alpha = 0.7) +
+    labs(title = var_name) +
+    theme_minimal()
+})
+
+# Arrange density plots in a grid (3x3)
+grid.arrange(grobs = density_plots, ncol = 3)
+
+```
+Se descartan exponencial, normal, t-student y lognormal.
+
+# Simulacion 
+
 
 ```{r}
 Nsimulaciones <- 1000
-muestra1 <- sample(persona1$valor, Nsimulaciones, replace = TRUE, prob = persona1$valor)
-muestra2 <- sample(persona2$valor, Nsimulaciones, replace = TRUE, prob = persona2$valor)
-muestra3 <- sample(persona3$valor, Nsimulaciones, replace = TRUE, prob = persona3$valor)
+muestra1 <- sample(persona1$edad, Nsimulaciones, replace = TRUE, prob = persona1$valor)
+muestra2 <- sample(persona2$edad, Nsimulaciones, replace = TRUE, prob = persona2$valor)
+muestra3 <- sample(persona3$edad, Nsimulaciones, replace = TRUE, prob = persona3$valor)
 ```
 
 ```{r}
@@ -87,7 +143,7 @@ proporciones <- prop.table(table(c(muestra1, muestra2, muestra3)))
 ```{r}
 # Calcula el promedio de las proporciones
 promedio <- (proporcion1 + proporcion2 + proporcion3) / 3
-edad <- seq(18,50,2)
+edad <-  persona1$edad
 # Agrega el promedio al gráfico
 plot(edad, proporcion1, type = 'b', ylab = 'Densidad', xlab = 'Edad del Novio')
 title(main = 'Edad Ideal de la Pareja de una Mujer de 22 Años')
@@ -118,102 +174,5 @@ ggplot(resultado, aes(x=edad, y=valor)) +
   geom_bar(stat="identity", fill="steelblue") +
   theme_minimal() +
   labs(x="Edad", y="Valor", title="Distribución combinada de las edades ideales")
-
-```
-
-# Comparacion con funciones
-
-```{r}
-#Simulacion densidad chi-cuadrada
-chi <- rchisq(Nsimulaciones, 3)
-#Simulacion densidad normal
-normal <- rnorm(Nsimulaciones, 25, 5)
-#Simulacion densidad t-student
-tstudent <- rt(Nsimulaciones, 3)
-#Simulacion densidad exponencial
-exponencial <- rexp(Nsimulaciones, 0.1)
-#Simulacion demsidad gamma
-gamma <- rgamma(Nsimulaciones, 2, 0.1)
-#Simulacion densidad beta
-beta <- rbeta(Nsimulaciones, 2, 5)
-#Simulacion densidad log-normal
-lognormal <- rlnorm(Nsimulaciones, 0, 1)
-```
-
-```{r}
-# Densidad de funciones
-par(mfrow=c(3,3))
-hist(chi, main="Chi-cuadrada", col="lightblue", border="black")
-hist(normal, main="Normal", col="lightblue", border="black")
-hist(tstudent, main="T-Student", col="lightblue", border="black")
-hist(exponencial, main="Exponencial", col="lightblue", border="black")
-hist(gamma, main="Gamma", col="lightblue", border="black")
-hist(beta, main="Beta", col="lightblue", border="black")
-hist(lognormal, main="Log-Normal", col="lightblue", border="black")
-```
-
-```{r}
-#Densidad
-par(mfrow=c(3,3))
-plot(density(chi), main="Chi-cuadrada", col="lightblue", lwd=2)
-plot(density(normal), main="Normal", col="lightblue", lwd=2)
-plot(density(tstudent), main="T-Student", col="lightblue", lwd=2)
-plot(density(exponencial), main="Exponencial", col="lightblue", lwd=2)
-plot(density(gamma), main="Gamma", col="lightblue", lwd=2)
-plot(density(beta), main="Beta", col="lightblue", lwd=2)
-plot(density(lognormal), main="Log-Normal", col="lightblue", lwd=2)
-```
-
-Vemos que algunas funciones se ajustan mejor a los datos que otras, por lo que podemos descartar algunas funciones para el ajuste de los datos.
-
-```{r}
-# Load the necessary library
-library(ggplot2)
-
-# Create a data frame with example data (replace with your actual data)
-# For demonstration purposes, I'll use random data
-set.seed(123)
-data <- data.frame(
-  chi = rchisq(100, df = 5),
-  normal = rnorm(100),
-  tstudent = rt(100, df = 10),
-  exponencial = rexp(100, rate = 0.1),
-  gamma = rgamma(100, shape = 2, rate = 0.1),
-  beta = rbeta(100, shape1 = 2, shape2 = 5),
-  lognormal = rlnorm(100)
-)
-
-# Create histograms using ggplot2
-histograms <- lapply(names(data), function(var_name) {
-  ggplot(data, aes(x = .data[[var_name]])) +
-    geom_histogram(binwidth = 1, fill = "lightblue", color = "black") +
-    labs(title = var_name) +
-    theme_minimal()
-})
-
-# Arrange histograms in a grid (3x3)
-library(gridExtra)
-grid.arrange(grobs = histograms, ncol = 3)
-
-# Create density plots using ggplot2
-density_plots <- lapply(names(data), function(var_name) {
-  ggplot(data, aes(x = .data[[var_name]])) +
-    geom_density(fill = "lightblue", color = "black", alpha = 0.7) +
-    labs(title = var_name) +
-    theme_minimal()
-})
-
-# Arrange density plots in a grid (3x3)
-grid.arrange(grobs = density_plots, ncol = 3)
-
-```
-
-# Elicitacion
-
-Se sabe que no van a haber edades menores a 18, ni muy mayores, por lo que sabemos que el intervalo de los datos tiene ciertas caracterisiticas, tengo que mover los parametros de las funciones para que se ajusten a estos comportamientos, teniendo en cuenta que ya que los datos tenga esa distribucion me entrega pistas de valores posibles o imposibles de la distribucion de los datos.
-
-## Parametros de las funciones
-
-```{r}
 
 ```
