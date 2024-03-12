@@ -14,13 +14,23 @@ knitr::opts_chunk$set(
 )
 ```
 
-\section{Tarea 2}
+```{r}
+library(knitr)
+```
 
-'Muy poco probable' 0 \< x \< 10 \Corregir
-'Poco probable' 10 \< x \< 20 'No estoy seguro' 20 \< x \< 30 'Es posible' 30 \< x \< 40 'Es muy posible' 40 \< x \< 50
+# Tarea 2
 
+-   'Muy poco probable': $0 \leq x < 10$
 
+-   'Poco probable': $10 \leq x < 20$
 
+-   'No estoy seguro': $20 \leq x < 30$
+
+-   'Es posible': $30 \leq x < 40$
+
+-   'Es muy posible': $40 \leq x < 50$
+
+-   Edades: $18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40$
 
 ```{r}
 persona1 <- data.frame(
@@ -28,6 +38,7 @@ persona1 <- data.frame(
   valor = c(5, 10, 50, 50, 35, 30, 25, 20, 20, 15, 10, 0)
 )
 
+kable(persona1)
 ```
 
 ```{r}
@@ -35,22 +46,35 @@ persona2 <- data.frame(
   edad = c(18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40),
   valor = c(0,15,50,50,45,45,40,35,20,10,10,0)
 )
+
+kable(persona2)
 ```
 
 ```{r}
 persona3 <- data.frame(
   edad = c(18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40),
-  valor = c(0,10,45,50,50,45,40,35,30,20,10,0)
-  
+  valor = c(0,15,50,50,45,45,40,35,20,10,10,0)
 )
+
+kable(persona3)
+```
+
+```{r}
+datos_combinados <- merge(merge(persona1, persona2, by = "edad", suffixes = c(".persona1", ".persona2")), persona3, by = "edad")
+names(datos_combinados)[names(datos_combinados) == "valor"] <- "valor.persona3"
+
+# Mostrar la tabla
+knitr::kable(datos_combinados, caption = "Datos combinados de todas las personas")
+```
+
+```{r}
+kable(summary(datos_combinados[,-1]), caption = "Resumen datos")
 ```
 
 ```{r}
 all_personas <- rbind(persona1, persona2, persona3)
 ```
 
-
-# Corregir altura (ubicacion) de etiquetas en el eje Y
 ```{r}
 par(lab=c(30,20,20))
 par(yaxt='n')
@@ -60,11 +84,12 @@ plot(c(1000000,3500000),c(0,50),type='n',ylab='',xlab='Edad Ideal',
 abline(v=c(0,4,8,12,16,20,24,28,32,36,40),lty=2,col='grey')
 abline(h=0)
 abline(h=c(5,10,15,20,25,30,35,40,45,50),lty=2,col='grey')
-legend(15.1,5,'Seguro que no',cex=0.5,bg='white')
-legend(15.1,15,'Poco probable',cex=0.5,bg='white')
-legend(15.1,25,'Puede ser',cex=0.5,bg='white')
-legend(15.1,35,'Casi seguro',cex=0.5,bg='white')
-legend(15.1,45,'Estoy seguro',cex=0.5,bg='white')
+legend(15.1,4,'Muy poco probable',cex=0.5,bg='white')
+legend(15.1,11,'Poco probable',cex=0.5,bg='white')
+legend(15.1,23,'No estoy seguro',cex=0.5,bg='white')
+legend(15.1,32,'Es posible',cex=0.5,bg='white')
+legend(15.1,41,'Casi seguro',cex=0.5,bg='white')
+legend(15.1,50,'Estoy seguro',cex=0.5,bg='white')
 
 # Agrega los valores de las personas como puntos con diferentes alturas en Y que son las categorias
 points(x=jitter(persona1$edad), y=jitter(persona1$valor), col="red", pch=19,cex = 0.8)
@@ -78,6 +103,7 @@ lines(x=persona3$edad, y=persona3$valor, col="green")
 legend(35, 50, c('Experto 1', 'Experto 2', 'Experto 3'), lty = c(1,1,1,1), 
        col = c( 'red', 'blue', 'green'))
 ```
+
 # Comparacion con funciones
 
 Vemos que algunas funciones se ajustan mejor a los datos que otras, por lo que podemos descartar algunas funciones para el ajuste de los datos.
@@ -122,10 +148,10 @@ density_plots <- lapply(names(data), function(var_name) {
 grid.arrange(grobs = density_plots, ncol = 3)
 
 ```
+
 Se descartan exponencial, normal, t-student y lognormal.
 
-# Simulacion 
-
+# Simulacion
 
 ```{r}
 Nsimulaciones <- 1000
@@ -141,6 +167,8 @@ proporcion3 <- prop.table(persona3$valor)
 proporciones <- prop.table(table(c(muestra1, muestra2, muestra3)))
 ```
 
+# Densidad de las edades ideales
+
 ```{r}
 # Calcula el promedio de las proporciones
 promedio <- (proporcion1 + proporcion2 + proporcion3) / 3
@@ -151,14 +179,62 @@ title(main = 'Edad Ideal de la Pareja de una Mujer de 22 Años')
 points(edad, proporcion2, type = 'b', col = 'blue')
 points(edad, proporcion3, type = 'b', col = 'red')
 points(edad, promedio, type = 'b', col = 'green')
-legend(35, 0.18, c('Experto 1', 'Experto 2', 'Experto 3', 'Promedio'), lty = c(1, 1, 1, 1), col = c('black', 'blue', 'red', 'green'))
+legend(35, 0.18, c('Simulacion1', 'Simulacion2', 'Simulacion3', 'Promedio'), lty = c(1, 1, 1, 1), col = c('black', 'blue', 'red', 'green'))
 
+```
+
+Comparing both densitys
+
+```{r}
+#Adding to proporciones the value of 40
+proporciones[12] <- 0
+
+# Crea un data frame con tus datos
+df <- data.frame(edad = unique(c(persona1$edad, persona2$edad, persona3$edad)),
+                 promedio = as.numeric(promedio),
+                 proporciones = as.numeric(proporciones))
+
+# Convierte los datos a formato largo
+df_long <- reshape2::melt(df, id.vars = "edad")
+
+# Crea el gráfico
+ggplot(df_long, aes(x = edad, y = value, fill = variable)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Edad", y = "Valor", fill = "Variable") +
+  theme_minimal()
+
+
+```
+
+```{r}
+# Resumen de la variable 'promedio'
+summary(df$promedio)
+
+# Resumen de la variable 'proporciones'
+summary(df$proporciones)
+
+```
+
+
+
+
+```{r}
+total <- rbind(proporcion1, proporcion2, proporcion3)
+
+# Distribucion de todas las muestras
+plot(density((total)), col = 'blue', lwd = 2, main = 'Distribución de las edades ideales', xlab = 'Edad', ylab = 'Densidad')
+```
+
+```{r}
+total <- rbind(muestra1, muestra2, muestra3)
+
+# Distribucion de todas las muestras
+plot(density((total)), col = 'blue', lwd = 2, main = 'Distribución de las edades ideales', xlab = 'Edad', ylab = 'Densidad')
 ```
 
 ```{r}
 combinado <- rbind(persona1, persona2, persona3)
 
-# Calcular la media ponderada por edad
 library(dplyr)
 resultado <- combinado %>%
   group_by(edad) %>%
@@ -167,13 +243,11 @@ resultado <- combinado %>%
 ```
 
 ```{r}
-# Cargar la librería para gráficos
-library(ggplot2)
 
-# Crear el gráfico de barras
 ggplot(resultado, aes(x=edad, y=valor)) +
   geom_bar(stat="identity", fill="steelblue") +
   theme_minimal() +
   labs(x="Edad", y="Valor", title="Distribución combinada de las edades ideales")
-
 ```
+
+La vista de una escalera en la distribucion de la funcion podria ser causada por la cantidad de etiquetas desarollada la encuesta, una mayor cantidad de etiquetas podria suavizar la distribucion de la funcion.
