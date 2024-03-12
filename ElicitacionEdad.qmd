@@ -1,11 +1,27 @@
 ---
-title: "Tarea 2"
-format: html
-editor: visual
+title: "Elicitacion Edad"
+author: "Juan Pablo Vanegas Moreno"
+date: "`r Sys.Date()`"
+description: "Este documento usa elicitacion para un analisis sobre la edad ideal para una mujer de 22 años."
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    number_sections: true
+    editor: visual
+    titlepage: true
+    theme: cosmo
 ---
 
+
 ```{r setup, include=F}
-knitr::opts_chunk$set(
+library(htmltools)
+library(knitr)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+opts_chunk$set(
 	echo = T,
 	fig.align = "center",
 	fig.pos = "H",
@@ -14,11 +30,12 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r}
-library(knitr)
-```
 
 # Tarea 2
+
+se preguntaron a 3 personas del mismo sexo y de aproximadamente la misma edad que participaran en el desarrollo de la plantilla de le edad ideal del novio de una mujer de 22 años. Cada persona proporcionó una distribución de probabilidad discreta para la edad ideal del novio. Los datos obtenidos se muestran a continuación:
+
+# Etiquetas y valores de las distribuciones de probabilidad:
 
 -   'Muy poco probable': $0 \leq x < 10$
 
@@ -67,6 +84,8 @@ names(datos_combinados)[names(datos_combinados) == "valor"] <- "valor.persona3"
 knitr::kable(datos_combinados, caption = "Datos combinados de todas las personas")
 ```
 
+# Resumen de los datos obtenidos de cada persona
+
 ```{r}
 kable(summary(datos_combinados[,-1]), caption = "Resumen datos")
 ```
@@ -104,52 +123,21 @@ legend(35, 50, c('Experto 1', 'Experto 2', 'Experto 3'), lty = c(1,1,1,1),
        col = c( 'red', 'blue', 'green'))
 ```
 
-# Comparacion con funciones
-
-Vemos que algunas funciones se ajustan mejor a los datos que otras, por lo que podemos descartar algunas funciones para el ajuste de los datos.
-
 ```{r}
-# Load the necessary library
-library(ggplot2)
+combinado <- rbind(persona1, persona2, persona3)
 
-# Create a data frame with example data (replace with your actual data)
-# For demonstration purposes, I'll use random data
-set.seed(420)
-data <- data.frame(
-  chi = rchisq(100, df = 5),
-  normal = rnorm(100),
-  tstudent = rt(100, df = 10),
-  exponencial = rexp(100, rate = 0.1),
-  gamma = rgamma(100, shape = 2, rate = 0.1),
-  lognormal = rlnorm(100)
-)
-
-# Create histograms using ggplot2
-histograms <- lapply(names(data), function(var_name) {
-  ggplot(data, aes(x = .data[[var_name]])) +
-    geom_histogram(binwidth = 1, fill = "lightblue", color = "black") +
-    labs(title = var_name) +
-    theme_minimal()
-})
-
-# Arrange histograms in a grid (3x3)
-library(gridExtra)
-grid.arrange(grobs = histograms, ncol = 3)
-
-# Create density plots using ggplot2
-density_plots <- lapply(names(data), function(var_name) {
-  ggplot(data, aes(x = .data[[var_name]])) +
-    geom_density(fill = "lightblue", color = "black", alpha = 0.7) +
-    labs(title = var_name) +
-    theme_minimal()
-})
-
-# Arrange density plots in a grid (3x3)
-grid.arrange(grobs = density_plots, ncol = 3)
+resultado <- combinado %>%
+  group_by(edad) %>%
+  summarise(valor = mean(valor))
 
 ```
 
-Se descartan exponencial, normal, t-student y lognormal.
+```{r}
+ggplot(resultado, aes(x=edad, y=valor)) +
+  geom_bar(stat="identity", fill="steelblue") +
+  theme_minimal() +
+  labs(x="Edad", y="Valor", title="Distribución combinada de las edades ideales")
+```
 
 # Simulacion
 
@@ -179,7 +167,7 @@ title(main = 'Edad Ideal de la Pareja de una Mujer de 22 Años')
 points(edad, proporcion2, type = 'b', col = 'blue')
 points(edad, proporcion3, type = 'b', col = 'red')
 points(edad, promedio, type = 'b', col = 'green')
-legend(35, 0.18, c('Simulacion1', 'Simulacion2', 'Simulacion3', 'Promedio'), lty = c(1, 1, 1, 1), col = c('black', 'blue', 'red', 'green'))
+legend(33, 0.18, c('Simulacion1', 'Simulacion2', 'Simulacion3', 'Promedio'), lty = c(1, 1, 1, 1), col = c('black', 'blue', 'red', 'green'))
 
 ```
 
@@ -206,23 +194,28 @@ ggplot(df_long, aes(x = edad, y = value, fill = variable)) +
 
 ```
 
-```{r}
-# Resumen de la variable 'promedio'
-summary(df$promedio)
-
-# Resumen de la variable 'proporciones'
-summary(df$proporciones)
-
-```
-
-
-
+# Resumen de la informacion obtenida y simulada
 
 ```{r}
-total <- rbind(proporcion1, proporcion2, proporcion3)
+# Calculamos el resumen
+resumen <- summary(df$promedio)
 
-# Distribucion de todas las muestras
-plot(density((total)), col = 'blue', lwd = 2, main = 'Distribución de las edades ideales', xlab = 'Edad', ylab = 'Densidad')
+# Imprimimos el resumen de una manera más legible
+print('Resumen simulaciones')
+cat("Mínimo: ", resumen["Min."], "\n",
+    "1er Cuartil: ", resumen["1st Qu."], "\n",
+    "Mediana: ", resumen["Median"], "\n",
+    "Media: ", resumen["Mean"], "\n",
+    "3er Cuartil: ", resumen["3rd Qu."], "\n",
+    "Máximo: ", resumen["Max."], "\n")
+resumen <- summary(df$proporciones)
+print('Resumen personas encuestadas')
+cat("Mínimo: ", resumen["Min."], "\n",
+    "1er Cuartil: ", resumen["1st Qu."], "\n",
+    "Mediana: ", resumen["Median"], "\n",
+    "Media: ", resumen["Mean"], "\n",
+    "3er Cuartil: ", resumen["3rd Qu."], "\n",
+    "Máximo: ", resumen["Max."], "\n")
 ```
 
 ```{r}
@@ -232,22 +225,51 @@ total <- rbind(muestra1, muestra2, muestra3)
 plot(density((total)), col = 'blue', lwd = 2, main = 'Distribución de las edades ideales', xlab = 'Edad', ylab = 'Densidad')
 ```
 
-```{r}
-combinado <- rbind(persona1, persona2, persona3)
-
-library(dplyr)
-resultado <- combinado %>%
-  group_by(edad) %>%
-  summarise(valor = mean(valor))
-
-```
-
-```{r}
-
-ggplot(resultado, aes(x=edad, y=valor)) +
-  geom_bar(stat="identity", fill="steelblue") +
-  theme_minimal() +
-  labs(x="Edad", y="Valor", title="Distribución combinada de las edades ideales")
-```
-
 La vista de una escalera en la distribucion de la funcion podria ser causada por la cantidad de etiquetas desarollada la encuesta, una mayor cantidad de etiquetas podria suavizar la distribucion de la funcion.
+
+Y que las edades fueron preguntadas en intervalos de dos en dos años, lo que podria causar que la distribucion de la funcion tambien se vea afectada.
+
+# Comparacion con funciones
+
+Vemos que algunas funciones se ajustan mejor a los datos que otras, por lo que podemos descartar algunas funciones para el ajuste de los datos.
+
+```{r}
+
+
+# Create a data frame with example data (replace with your actual data)
+# For demonstration purposes, I'll use random data
+set.seed(420)
+data <- data.frame(
+  chi = rchisq(100, df = 5),
+  normal = rnorm(100),
+  tstudent = rt(100, df = 10),
+  exponencial = rexp(100, rate = 0.1),
+  gamma = rgamma(100, shape = 2, rate = 0.1),
+  lognormal = rlnorm(100)
+)
+
+# Create histograms using ggplot2
+histograms <- lapply(names(data), function(var_name) {
+  ggplot(data, aes(x = .data[[var_name]])) +
+    geom_histogram(binwidth = 1, fill = "lightblue", color = "black") +
+    labs(title = var_name) +
+    theme_minimal()
+})
+
+# Arrange histograms in a grid (3x3)
+grid.arrange(grobs = histograms, ncol = 3)
+
+# Create density plots using ggplot2
+density_plots <- lapply(names(data), function(var_name) {
+  ggplot(data, aes(x = .data[[var_name]])) +
+    geom_density(fill = "lightblue", color = "black", alpha = 0.7) +
+    labs(title = var_name) +
+    theme_minimal()
+})
+
+# Arrange density plots in a grid (3x3)
+grid.arrange(grobs = density_plots, ncol = 3)
+
+```
+
+Se descartan exponencial, normal, t-student y lognormal.
