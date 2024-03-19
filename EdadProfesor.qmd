@@ -1,0 +1,182 @@
+
+```{r}
+library(readxl)
+library(reshape2)
+library(ggplot2)
+library(dplyr)
+library(ggpubr)
+library(kableExtra)
+library(knitr)
+
+```
+
+```{r}
+datos <- read_excel("bayestarea.xlsx", skip = 6)
+```
+
+# Elicitacion estudiantes
+
+Se obtuvo informacion de 38 estudiantes que conocen al profesor calificar que tan probable es que el profesor tenga cierta edad. con los niveles de confianza
+
+```{r}
+ages <- as.numeric(colnames(datos)[-1]) # get the ages, exclude the first column ('NOMBRE')
+
+scores <- as.matrix(datos[,-1]) # get the scores, exclude the first column ('NOMBRE')
+
+par(lab=c(30,20,20))
+par(yaxt='n')
+
+x <- c(30, 80)
+y <- c(0, 100)
+
+plot(x, y, type='n', ylab='', xlab='Edad', xlim=x)
+
+abline(v=c(seq(0,80,2)),lty=2,col='grey')
+abline(h=0)
+abline(h=c(10,20,30,40,50,60,70,80,90),lty=2,col='grey')
+
+legend(30,10,'Estoy casi seguro que no es posible',cex=0.5,bg='white')
+legend(30,25,'Muy poco probable',cex=0.5,bg='white')
+legend(30,40,'Poco probable',cex=0.5,bg='white')
+legend(30,55,'No estoy seguro',cex=0.5,bg='white')
+legend(30,70,'Es posible',cex=0.5,bg='white')
+legend(30,85,'Es muy posible',cex=0.5,bg='white')
+legend(30,100,'Estoy casi seguro',cex=0.5,bg='white')
+
+mtext("Probabilidad", side=2, line=3)
+
+# Add lines for each row in the data frame
+invisible(apply(scores, 1, function(score) lines(ages, score, col = "blue")))
+
+```
+
+```{r}
+
+# Transponer los datos para que las filas sean las edades y las columnas sean las personas
+datos_transpuestos <- t(datos[-1]) # Excluir la primera columna ('NOMBRE')
+colnames(datos_transpuestos) <- datos$NOMBRE
+
+# Convertir la matriz transpuesta en un data frame
+datos_combinados <- as.data.frame(datos_transpuestos)
+
+# Convertir la primera columna en una variable 'edad'
+datos_combinados$edad <- rownames(datos_combinados)
+
+kable(head(datos_combinados), "html") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), full_width = F)
+
+
+
+
+```
+
+```{r}
+library(tidyverse)
+
+# Transformar los datos a un formato largo
+datos_largos <- datos %>%
+  gather(edad, valor, -NOMBRE) %>%
+  mutate(edad = as.numeric(gsub("`", "", edad))) # Convertir la edad a numérico
+
+# Calcular la media de los valores para cada edad
+resultado <- datos_largos %>%
+  group_by(edad) %>%
+  summarise(valor = mean(valor, na.rm = TRUE))
+
+# Crear el gráfico
+ggplot(resultado, aes(x=edad, y=valor)) +
+  geom_bar(stat="identity", fill="steelblue") +
+  theme_minimal() +
+  labs(x="Edad", y="Valor", title="Distribución combinada de las edades ideales")
+
+```
+
+```{r}
+proporcion <- prop.table(table(datos_largos$edad))
+```
+
+```{r}
+
+```
+
+
+
+```{r}
+plot(density(proporcion))
+```
+
+```{r}
+ggqqplot(resultado$valor)
+
+```
+
+```{r}
+shapiro.test(resultado$valor)
+```
+
+```{r}
+# Verificando normalidad
+resultado_sin_ceros <- datos_largos %>%
+  filter(valor != 0) %>%
+  group_by(edad) %>%
+  summarise(valor = mean(valor, na.rm = TRUE))
+```
+
+```{r}
+ggplot(resultado_sin_ceros, aes(x=edad, y=valor)) +
+  geom_bar(stat="identity", fill="steelblue") +
+  theme_minimal() +
+  labs(x="Edad", y="Valor", title="Distribución combinada de las edades ideales")
+```
+
+```{r}
+ggqqplot(resultado_sin_ceros$valor)
+```
+
+```{r}
+shapiro.test(resultado_sin_ceros$valor)
+```
+
+```{r}
+# Número de simulaciones
+Nsimulaciones <- 1000
+
+# Crear una lista vacía para almacenar los resultados de las simulaciones
+simulaciones <- list()
+
+# Realizar las simulaciones para cada persona
+for (nombre in unique(datos_largos$NOMBRE)) {
+  # Filtrar los datos para la persona actual
+  datos_persona <- datos_largos %>% filter(NOMBRE == nombre)
+  
+  # Realizar la simulación
+  muestra <- sample(datos_persona$edad, Nsimulaciones, replace = TRUE, prob = datos_persona$valor)
+  
+  # Almacenar los resultados de la simulación en la lista
+  simulaciones[[nombre]] <- muestra
+}
+
+```
+
+```{r}
+# Unir todas las simulaciones en un solo vector
+simulaciones_unidas <- unlist(simulaciones)
+
+# Ahora puedes analizar la distribución de las simulaciones unidas
+hist(simulaciones_unidas, main="Distribución de las simulaciones", xlab="Edad", col="steelblue")
+```
+
+```{r}
+plot(density(simulaciones_unidas))
+```
+
+```{r}
+ggqqplot(simulaciones_unidas)
+
+```
+
+Media de todas las mediasd de todas las medias Mixtura de todas las distribuciones, todos los pesos Asumir modelo modelo probabilistico
+
+```{r}
+shapiro.test(simulaciones_unidas[1:5000])
+```
